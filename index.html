@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Semester GPA Planner & Archive</title>
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+      margin: 0;
+      padding: 0;
+      color: #334155;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 960px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 2rem 2.5rem 3rem 2.5rem;
+      box-shadow:
+        0 8px 24px rgba(100, 100, 111, 0.2),
+        0 2px 8px rgba(0, 0, 0, 0.07);
+    }
+    h1, h2, h3 {
+      color: #1e293b;
+      margin-bottom: 0.6rem;
+      font-weight: 700;
+      text-align: center;
+      user-select: none;
+    }
+    h1 {
+      font-size: 2.6rem;
+      margin-bottom: 1.4rem;
+    }
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 2.4rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid #94a3b8;
+      padding-bottom: 0.3rem;
+    }
+    h3 {
+      font-size: 1.4rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Button styles */
+    button {
+      background: #2563eb;
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 0.6rem 1.6rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.25s ease;
+      user-select: none;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+      margin-top: 1rem;
+      display: inline-block;
+    }
+    button:hover {
+      background: #1e40af;
+      box-shadow: 0 6px 14px rgba(30, 64, 175, 0.45);
+    }
+    button:active {
+      background: #1e3aaf;
+      box-shadow: none;
+    }
+
+    /* Dark mode button */
+    .dark-toggle {
+      display: block;
+      margin: 0 auto 2rem auto;
+      background: #475569;
+      color: #f1f5f9;
+      font-weight: 600;
+      width: 160px;
+      text-align: center;
+      border-radius: 12px;
+      padding: 0.5rem;
+      box-shadow: 0 4px 10px rgba(71, 85, 105, 0.4);
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    .dark-toggle:hover {
+      background: #334155;
+      box-shadow: 0 6px 14px rgba(51, 65, 85, 0.6);
+    }
+
+    /* Sections */
+    .gpa-form, .exam-records, .module-adder, .search-section {
+      background: #f8fafc;
+      padding: 1.5rem 2rem;
+      border-radius: 12px;
+      box-shadow: inset 0 0 8px #dbeafe;
+      margin-bottom: 2.4rem;
+      user-select: none;
+    }
+
+    /* Input and select styles */
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      font-size: 1rem;
+      padding: 0.55rem 0.9rem;
+      margin-top: 0.4rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      border: 1.8px solid #cbd5e1;
+      outline-offset: 2px;
+      outline-color: #93c5fd;
+      font-family: inherit;
+      transition: border-color 0.3s ease;
+      resize: vertical;
+      user-select: text;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 5px 1px #60a5faaa;
+    }
+    select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #2563eb 50%),
+        linear-gradient(135deg, #2563eb 50%, transparent 50%),
+        linear-gradient(to right, #cbd5e1, #cbd5e1);
+      background-position:
+        calc(100% - 20px) calc(1rem + 2px),
+        calc(100% - 15px) calc(1rem + 2px),
+        calc(100% - 25px) 1rem;
+      background-size: 5px 5px, 5px 5px, 1px 1.5rem;
+      background-repeat: no-repeat;
+      cursor: pointer;
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+      user-select: text;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 0.6rem 1rem;
+      text-align: left;
+    }
+    th {
+      background-color: #e2e8f0;
+      font-weight: 600;
+      color: #475569;
+    }
+    tbody tr:hover {
+      background-color: #f1f5f9;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Week planner */
+    .week {
+      margin-bottom: 2rem;
+      user-select: none;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    li {
+      background: #e2e8f0;
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-weight: 500;
+      color: #334155;
+      transition: background-color 0.25s ease;
+      user-select: none;
+    }
+    li:hover {
+      background: #cbd5e1;
+    }
+    li.done {
+      text-decoration: line-through;
+      background: #bbf7d0 !important;
+      color: #14532d;
+      cursor: default;
+    }
+    input[type="checkbox"] {
+      margin-right: 1rem;
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+    }
+    input[type="checkbox"]:hover {
+      box-shadow: 0 0 5px #60a5faaa;
+    }
+
+    /* Module notes textarea */
+    .module-notes {
+      background: #fff7ed;
+      padding: 0.5rem;
+      border-left: 4px solid #f97316;
+      margin-top: 0.3rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #334155;
+      resize: vertical;
+      min-height: 50px;
+      user-select: text;
+    }
+
+    /* Custom modules container */
+    #custom-modules > div {
+      margin-bottom: 2rem;
+    }
+
+    /* GPA Year Summary style */
+    #gpa-year-summary p {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin: 0.4rem 0;
+      color: #2563eb;
+      user-select: text;
+    }
+
+    /* Search section styles */
+    .search-section form {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .search-section input[type="search"] {
+      flex: 1;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      font-size: 1rem;
+    }
+    .search-section button {
+      min-width: 100px;
+      padding: 0.6rem 1rem;
+    }
+    #searchEngineInfo {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+      user-select: none;
+    }
+
+    /* Dark mode overrides */
+    .dark-mode {
+      background-color: #0f172a;
+      color: #cbd5e1;
+    }
+    .dark-mode .container {
+      background-color: #1e293b;
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    .dark-mode h1, .dark-mode h2, .dark-mode h3 {
+      color: #e2e8f0;
+    }
+    .dark-mode table, .dark-mode th, .dark-mode td {
+      border-color: #334155;
+    }
+    .dark-mode th {
+      background-color: #334155;
+    }
+    .dark-mode tbody tr:hover {
+      background-color: #475569;
+    }
+    .dark-mode .gpa-form,
+    .dark-mode .exam-records,
+    .dark-mode .module-adder,
+    .dark-mode .search-section {
+      background: #334155;
+      box-shadow: inset 0 0 8px #1e40af;
+    }
+    .dark-mode input[type="text"],
+    .dark-mode input[type="number"],
+    .dark-mode select,
+    .dark-mode textarea,
+    .dark-mode input[type="search"] {
+      background-color: #475569;
+      color: #e2e8f0;
+      border-color: #1e40af;
+      outline-color: #2563eb;
+    }
+    .dark-mode input[type="text"]:focus,
+    .dark-mode input[type="number"]:focus,
+    .dark-mode select:focus,
+    .dark-mode textarea:focus,
+    .dark-mode input[type="search"]:focus {
+      box-shadow: 0 0 8px 2px #2563ebaa;
+    }
+    .dark-mode button {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 4px 10px #2563ebbb;
+    }
+    .dark-mode button:hover {
+      background: #1e40af;
+      box-shadow: 0 6px 14px #1e40afcc;
+    }
+    .dark-mode .dark-toggle {
+      background: #1e293b;
+      color: #e2e8f0;
+      box-shadow: 0 4px 10px #334155cc;
+    }
+    .dark-mode .dark-toggle:hover {
+      background: #334155;
+      box-shadow: 0 6px 14px #475569cc;
+    }
+  </style>
+</head>
+<body>
+  <button class="dark-toggle" onclick="document.body.classList.toggle('dark-mode')">🌙 Toggle Dark Mode</button>
+  <div class="container" role="main" aria-label="Semester GPA Planner and Archive">
+
+    <h1>📚 Semester GPA Planner & Archive</h1>
+
+    <section class="gpa-form" aria-label="GPA Calculator">
+      <h2>🎯 GPA Calculator</h2>
+      <p>Enter your module marks (out of 100):</p>
+      <input type="number" id="mark1" placeholder="Module 1 Mark" min="0" max="100" aria-label="Module 1 Mark" />
+      <input type="number" id="mark2" placeholder="Module 2 Mark" min="0" max="100" aria-label="Module 2 Mark" />
+      <input type="number" id="mark3" placeholder="Module 3 Mark" min="0" max="100" aria-label="Module 3 Mark" />
+      <button onclick="calculateGPA()" aria-label="Calculate GPA">Calculate GPA</button>
+      <p id="gpa-result" aria-live="polite" style="margin-top:1rem;"></p>
+      <h3>📊 GPA Per Year Summary</h3>
+      <div id="gpa-year-summary" aria-live="polite"></div>
+    </section>
+
+    <section class="exam-records" aria-label="Academic History Year 1">
+      <h2>📜 Academic History (Year 1)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Semester</th>
+            <th scope="col">Module Code</th>
+            <th scope="col">Module Name</th>
+            <th scope="col">Mark (%)</th>
+          </tr>
+        </thead>
+        <tbody id="archive-body">
+          <tr><td>Semester 1</td><td>CSE101</td><td>Computer Technology</td><td>73</td></tr>
+          <tr><td>Semester 1</td><td>CSE103</td><td>Systems Development</td><td>66</td></tr>
+          <tr><td>Semester 1</td><td>CSE104</td><td>Mathematics and Statistics</td><td>65</td></tr>
+          <tr><td>Semester 2</td><td>CSE105</td><td>Web & Multimedia Development</td><td>59</td></tr>
+          <tr><td>Semester 2</td><td>CSE102</td><td>Programming with Java</td><td>53</td></tr>
+          <tr><td>Semester 2</td><td>CSE106</td><td>Systems Installation & Maintenance</td><td>85</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="module-adder" aria-label="Add Custom Module">
+      <h2>➕ Add Your Own Module</h2>
+      <input type="text" id="modTitle" placeholder="Module Title" aria-label="Module Title" />
+      <input type="number" id="modMark" placeholder="Mark (0-100)" min="0" max="100" aria-label="Module Mark (optional)" />
+      <select id="yearSelect" aria-label="Select Year">
+        <option value="" disabled selected>Select Year</option>
+        <option value="1">Year 1</option>
+        <option value="2">Year 2</option>
+        <option value="3">Year 3</option>
+        <option value="4">Year 4</option>
+      </select>
+      <textarea id="modTasks" placeholder="Write tasks separated by new lines" aria-label="Module Tasks"></textarea>
+      <button onclick="addModule()" aria-label="Add Module">Add Module</button>
+      <div id="custom-modules"></div>
+    </section>
+
+    <section aria-label="Weekly Planner">
+      <h2>🗓️ Weekly Planner</h2>
+      <div id="planner"></div>
+    </section>
+
+    <section class="search-section" aria-label="Search">
+      <h2>🔍 Search</h2>
+      <form id="searchForm" onsubmit="performSearch(event)" >
+        <input 
+          type="search" 
+          id="searchInput" 
+          placeholder="Search the web..." 
+          aria-label="Search the web" 
+          required
+        />
+        <button type="submit" aria-label="Perform Search">Search</button>
+      </form>
+      <p id="searchEngineInfo" aria-live="polite">
+        Search engine: <strong id="currentEngine">Google</strong>
+      </p>
+    </section>
+
+  </div>
+
+  <script>
+    const tasks = [
+      { week: 1, text: "Organize course files and syllabus" },
+      { week: 1, text: "Join a study group" },
+      { week: 2, text: "Set up IntelliJ and review Year 1 Java" },
+      { week: 3, text: "Start assignments and create a mini Java app" },
+      { week: 4, text: "Submit first draft and expand Java project" },
+      { week: 5, text: "Focus on weakest module and teach a concept" },
+      { week: 6, text: "Take mock tests and submit assignments" },
+      { week: 7, text: "Start revision and make flashcards" },
+      { week: 8, text: "Finalize assignments and debug code" },
+      { week: 9, text: "Do a full past paper and get feedback" },
+      { week: 10, text: "Revise 3 topics/module and create summaries" },
+      { week: 11, text: "Write timed past papers and fix routine" },
+      { week: 12, text: "Rest, write well, and celebrate" },
+    ];
+
+    // Weekly Planner render
+    const planner = document.getElementById("planner");
+    const weeks = Array.from(new Set(tasks.map(t => t.week)));
+    weeks.forEach(week => {
+      const weekSection = document.createElement("div");
+      weekSection.classList.add("week");
+      const header = document.createElement("h3");
+      header.textContent = `Week ${week}`;
+      weekSection.appendChild(header);
+      const ul = document.createElement("ul");
+      tasks.filter(t => t.week === week).forEach(task => {
+        const li = document.createElement("li");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = localStorage.getItem(task.text) === "true";
+        if (checkbox.checked) li.classList.add("done");
+        checkbox.addEventListener("change", () => {
+          li.classList.toggle("done", checkbox.checked);
+          localStorage.setItem(task.text, checkbox.checked);
+        });
+        li.appendChild(checkbox);
+        li.appendChild(document.createTextNode(task.text));
+        const note = document.createElement("div");
+        note.className = "module-notes";
+        const noteField = document.createElement("textarea");
+        noteField.placeholder = "Notes or reflections...";
+        const noteKey = `note-${task.text}`;
+        noteField.value = localStorage.getItem(noteKey) || "";
+        noteField.addEventListener("input", () => {
+          localStorage.setItem(noteKey, noteField.value);
+        });
+        note.appendChild(noteField);
+        ul.appendChild(li);
+        ul.appendChild(note);
+      });
+      weekSection.appendChild(ul);
+      planner.appendChild(weekSection);
+    });
+
+    // GPA scale function
+    function gpaScale(mark) {
+      return mark >= 80 ? 4.0 :
+             mark >= 70 ? 3.5 :
+             mark >= 60 ? 3.0 :
+             mark >= 50 ? 2.5 :
+             mark >= 40 ? 2.0 :
+             mark >= 30 ? 1.0 : 0.0;
+    }
+
+    // Calculate GPA from 3 inputs
+    function calculateGPA() {
+      const marks = [
+        parseFloat(document.getElementById('mark1').value),
+        parseFloat(document.getElementById('mark2').value),
+        parseFloat(document.getElementById('mark3').value)
+      ];
+      if (marks.some(isNaN)) {
+        document.getElementById('gpa-result').innerText = "Please enter all marks.";
+        return;
+      }
+      const gpa = marks.map(gpaScale);
+      const finalGPA = (gpa.reduce((a, b) => a + b, 0) / gpa.length).toFixed(2);
+      document.getElementById('gpa-result').innerText = `Your GPA is ${finalGPA}`;
+      updateGpaPerYear();
+    }
+
+    // Get academic history data from static table (Year 1)
+    function getArchiveData() {
+      const rows = document.querySelectorAll('#archive-body tr');
+      const modules = [];
+      rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        modules.push({
+          year: 1,
+          code: cells[1].textContent,
+          name: cells[2].textContent,
+          mark: parseFloat(cells[3].textContent)
+        });
+      });
+      return modules;
+    }
+
+    // Custom modules saved in localStorage
+    function getCustomModulesData() {
+      const data = localStorage.getItem('customModulesData');
+      return data ? JSON.parse(data) : [];
+    }
+    function setCustomModulesData(data) {
+      localStorage.setItem('customModulesData', JSON.stringify(data));
+    }
+
+    // Render custom modules by year
+    function renderCustomModules() {
+      const container = document.getElementById('custom-modules');
+      container.innerHTML = '';
+      const data = getCustomModulesData();
+      if (data.length === 0) return;
+      const byYear = {};
+      data.forEach(mod => {
+        if (!byYear[mod.year]) byYear[mod.year] = [];
+        byYear[mod.year].push(mod);
+      });
+      for (const year in byYear) {
+        const yearDiv = document.createElement('div');
+        yearDiv.innerHTML = `<h2>Custom Modules - Year ${year}</h2>`;
+        byYear[year].forEach((mod, modIndex) => {
+          const modDiv = document.createElement('div');
+          modDiv.className = 'custom-module';
+          modDiv.innerHTML = `<h3>${mod.title} (Mark: ${mod.mark ?? 'N/A'})</h3><ul></ul>`;
+          const ul = modDiv.querySelector('ul');
+          mod.tasks.forEach((task, taskIndex) => {
+            const li = document.createElement('li');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = task.done || false;
+            if (checkbox.checked) li.classList.add('done');
+            checkbox.addEventListener('change', () => {
+              li.classList.toggle('done', checkbox.checked);
+              const data = getCustomModulesData();
+              data[modIndex].tasks[taskIndex].done = checkbox.checked;
+              setCustomModulesData(data);
+            });
+            li.appendChild(checkbox);
+            li.appendChild(document.createTextNode(task.text));
+            const noteDiv = document.createElement('div');
+            noteDiv.className = 'module-notes';
+            const noteField = document.createElement('textarea');
+            noteField.placeholder = 'Notes or reflections...';
+            noteField.value = task.notes || '';
+            noteField.addEventListener('input', () => {
+              const data = getCustomModulesData();
+              data[modIndex].tasks[taskIndex].notes = noteField.value;
+              setCustomModulesData(data);
+            });
+            noteDiv.appendChild(noteField);
+            li.appendChild(noteDiv);
+            ul.appendChild(li);
+          });
+          yearDiv.appendChild(modDiv);
+        });
+        container.appendChild(yearDiv);
+      }
+    }
+
+    // Add new module from input fields
+    function addModule() {
+      const title = document.getElementById('modTitle').value.trim();
+      const markStr = document.getElementById('modMark').value.trim();
+      const year = document.getElementById('yearSelect').value;
+      const tasksRaw = document.getElementById('modTasks').value.trim().split('\n').filter(t => t.trim());
+      if (!title || !year || tasksRaw.length === 0) {
+        alert('Please enter Module Title, select Year, and add at least one task.');
+        return;
+      }
+      const mark = markStr ? parseFloat(markStr) : null;
+      if (mark !== null && (mark < 0 || mark > 100 || isNaN(mark))) {
+        alert('Please enter a valid mark between 0 and 100 or leave empty.');
+        return;
+      }
+      const tasks = tasksRaw.map(text => ({ text, done: false, notes: '' }));
+      const data = getCustomModulesData();
+      data.push({ title, year, mark, tasks });
+      setCustomModulesData(data);
+      document.getElementById('modTitle').value = '';
+      document.getElementById('modMark').value = '';
+      document.getElementById('yearSelect').value = '';
+      document.getElementById('modTasks').value = '';
+      renderCustomModules();
+      updateGpaPerYear();
+    }
+
+    // Update GPA summary per year for archive + custom modules
+    function updateGpaPerYear() {
+      const archiveMods = getArchiveData();
+      const customMods = getCustomModulesData();
+      const allMods = [...archiveMods, ...customMods.filter(m => m.mark !== null)];
+      const yearMarks = {};
+      allMods.forEach(mod => {
+        if (!yearMarks[mod.year]) yearMarks[mod.year] = [];
+        yearMarks[mod.year].push(mod.mark);
+      });
+      const gpaYearSummary = document.getElementById('gpa-year-summary');
+      gpaYearSummary.innerHTML = '';
+      for (const year in yearMarks) {
+        const marks = yearMarks[year];
+        const gpas = marks.map(gpaScale);
+        const avgGpa = (gpas.reduce((a, b) => a + b, 0) / gpas.length).toFixed(2);
+        const p = document.createElement('p');
+        p.textContent = `Year ${year}: GPA = ${avgGpa} (${marks.length} module${marks.length > 1 ? 's' : ''})`;
+        gpaYearSummary.appendChild(p);
+      }
+    }
+
+    // Search functionality
+    function performSearch(event) {
+      event.preventDefault();
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return;
+      const isDark = document.body.classList.contains('dark-mode');
+      const searchEngineURL = isDark 
+        ? 'https://duckduckgo.com/?q=' + encodeURIComponent(query) 
+        : 'https://www.google.com/search?q=' + encodeURIComponent(query);
+      window.open(searchEngineURL, '_blank');
+    }
+
+    function updateSearchEngineInfo() {
+      const currentEngine = document.getElementById('currentEngine');
+      if (document.body.classList.contains('dark-mode')) {
+        currentEngine.textContent = 'DuckDuckGo';
+      } else {
+        currentEngine.textContent = 'Google';
+      }
+    }
+
+    // On dark mode toggle update search engine info
+    document.querySelector('.dark-toggle').addEventListener('click', () => {
+      setTimeout(updateSearchEngineInfo, 150);
+    });
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCustomModules();
+      updateGpaPerYear();
+      updateSearchEngineInfo();
+    });
+  </script>
+</body>
+</html>
