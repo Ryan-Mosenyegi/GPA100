@@ -17,6 +17,8 @@
       --notes-border: #f97316;
       --semester1-bg: #dbeafe;
       --semester2-bg: #fee2e2;
+      --daily-log-bg: #ecfdf5;
+      --daily-log-border: #10b981;
     }
     .dark-mode {
       --bg-color: #0f172a;
@@ -30,6 +32,8 @@
       --notes-border: #9a3412;
       --semester1-bg: #1e3a8a;
       --semester2-bg: #7f1d1d;
+      --daily-log-bg: #064e3b;
+      --daily-log-border: #047857;
     }
     body {
       font-family: Arial, sans-serif;
@@ -47,11 +51,11 @@
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h1, h2, h3 {
+    h1, h2, h3, h4 {
       text-align: center;
       color: var(--text-color);
     }
-    .module, .custom-module, .gpa-form, .exam-records, .module-adder {
+    .module, .custom-module, .gpa-form, .exam-records, .module-adder, .daily-log {
       background: var(--module-bg);
       padding: 1rem;
       margin-bottom: 1rem;
@@ -86,7 +90,7 @@
       margin-right: 1rem;
       cursor: pointer;
     }
-    textarea, input[type="text"], input[type="number"] {
+    textarea, input[type="text"], input[type="number"], input[type="date"], input[type="time"] {
       width: 100%;
       margin-top: 0.5rem;
       padding: 0.75rem;
@@ -125,6 +129,13 @@
     button:hover {
       background: #2563eb;
     }
+    button.secondary {
+      background: var(--task-bg);
+      color: var(--text-color);
+    }
+    button.secondary:hover {
+      background: var(--border-color);
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -140,14 +151,18 @@
       background: var(--task-bg);
       font-weight: bold;
     }
-    .module-notes {
+    .module-notes, .daily-entry {
       background: var(--notes-bg);
       padding: 0.75rem;
       border-left: 4px solid var(--notes-border);
       margin: 0.5rem 0;
       border-radius: 4px;
     }
-    .module-notes textarea {
+    .daily-entry {
+      background: var(--daily-log-bg);
+      border-left-color: var(--daily-log-border);
+    }
+    .module-notes textarea, .daily-entry textarea {
       min-height: 80px;
       resize: vertical;
     }
@@ -186,6 +201,45 @@
       border-radius: 6px;
       text-align: center;
     }
+    .datetime-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .log-entries {
+      margin-top: 1rem;
+    }
+    .log-entry {
+      background: var(--daily-log-bg);
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      border-left: 4px solid var(--daily-log-border);
+    }
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+    .log-content {
+      white-space: pre-wrap;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .tab {
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+    .tab.active {
+      border-bottom-color: #3b82f6;
+      font-weight: bold;
+    }
 
     @media (max-width: 768px) {
       .container {
@@ -208,7 +262,7 @@
       th, td {
         padding: 0.5rem;
       }
-      .mark-inputs {
+      .mark-inputs, .datetime-inputs {
         grid-template-columns: 1fr;
       }
     }
@@ -219,11 +273,15 @@
         overflow-x: auto;
         white-space: nowrap;
       }
-      .module, .custom-module, .gpa-form, .exam-records, .module-adder {
+      .module, .custom-module, .gpa-form, .exam-records, .module-adder, .daily-log {
         padding: 0.75rem;
       }
       li {
         padding: 0.5rem;
+      }
+      .tab {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
       }
     }
   </style>
@@ -233,72 +291,108 @@
   <div class="container">
     <h1>📚 Semester GPA Planner & Archive</h1>
 
-    <div class="gpa-form">
-      <h2>🎯 GPA Calculator</h2>
-      <p>Enter your module marks (out of 100):</p>
-      <div class="mark-inputs">
-        <input type="number" id="mark1" placeholder="Module 1 Mark" min="0" max="100">
-        <input type="number" id="mark2" placeholder="Module 2 Mark" min="0" max="100">
-        <input type="number" id="mark3" placeholder="Module 3 Mark" min="0" max="100">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('planner-tab')">Planner</div>
+      <div class="tab" onclick="showTab('gpa-tab')">GPA Calculator</div>
+      <div class="tab" onclick="showTab('history-tab')">Academic History</div>
+      <div class="tab" onclick="showTab('daily-tab')">Daily Log</div>
+    </div>
+
+    <div id="planner-tab" class="tab-content">
+      <h2>🗓️ Weekly Planner</h2>
+      <div id="planner"></div>
+
+      <div class="module-adder">
+        <h2>➕ Add Your Own Module</h2>
+        <input type="text" id="modTitle" placeholder="Module Title">
+        <textarea id="modTasks" placeholder="Write tasks separated by new lines"></textarea>
+        <button onclick="addModule()">Add Module</button>
+        <div id="custom-modules"></div>
       </div>
-      <button onclick="calculateGPA()">Calculate GPA</button>
-      <p id="gpa-result"></p>
     </div>
 
-    <div class="exam-records">
-      <h2>📜 Academic History (Year 1)</h2>
-      
-      <div class="semester-gpa semester1" id="semester1-gpa">Semester 1 GPA: Calculating...</div>
-      <table id="semester1-table">
-        <thead>
-          <tr>
-            <th>Semester</th>
-            <th>Module Code</th>
-            <th>Module Name</th>
-            <th>Mark (%)</th>
-            <th>Grade</th>
-            <th>GPA</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Semester 1</td><td>DTA101</td><td>Introduction to Data Analytics</td><td>73</td><td></td><td></td></tr>
-          <tr><td>Semester 1</td><td>DTA103</td><td>Data Visualization</td><td>66</td><td></td><td></td></tr>
-          <tr><td>Semester 1</td><td>DTA104</td><td>Statistics for Analytics</td><td>65</td><td></td><td></td></tr>
-        </tbody>
-      </table>
-      
-      <div class="semester-gpa semester2" id="semester2-gpa">Semester 2 GPA: Calculating...</div>
-      <table id="semester2-table">
-        <thead>
-          <tr>
-            <th>Semester</th>
-            <th>Module Code</th>
-            <th>Module Name</th>
-            <th>Mark (%)</th>
-            <th>Grade</th>
-            <th>GPA</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Semester 2</td><td>DTA105</td><td>Python for Data Analysis</td><td>59</td><td></td><td></td></tr>
-          <tr><td>Semester 2</td><td>DTA102</td><td>SQL and Databases</td><td>53</td><td></td><td></td></tr>
-          <tr><td>Semester 2</td><td>DTA106</td><td>Machine Learning Fundamentals</td><td>85</td><td></td><td></td></tr>
-        </tbody>
-      </table>
-      
-      <div class="year-gpa" id="year-gpa">Year 1 GPA: Calculating...</div>
+    <div id="gpa-tab" class="tab-content" style="display:none;">
+      <div class="gpa-form">
+        <h2>🎯 GPA Calculator</h2>
+        <p>Enter your module marks (out of 100):</p>
+        <div class="mark-inputs">
+          <input type="number" id="mark1" placeholder="Module 1 Mark" min="0" max="100">
+          <input type="number" id="mark2" placeholder="Module 2 Mark" min="0" max="100">
+          <input type="number" id="mark3" placeholder="Module 3 Mark" min="0" max="100">
+        </div>
+        <button onclick="calculateGPA()">Calculate GPA</button>
+        <p id="gpa-result"></p>
+      </div>
     </div>
 
-    <div class="module-adder">
-      <h2>➕ Add Your Own Module</h2>
-      <input type="text" id="modTitle" placeholder="Module Title">
-      <textarea id="modTasks" placeholder="Write tasks separated by new lines"></textarea>
-      <button onclick="addModule()">Add Module</button>
-      <div id="custom-modules"></div>
+    <div id="history-tab" class="tab-content" style="display:none;">
+      <div class="exam-records">
+        <h2>📜 Academic History (Year 1)</h2>
+        
+        <div class="semester-gpa semester1" id="semester1-gpa">Semester 1 GPA: Calculating...</div>
+        <table id="semester1-table">
+          <thead>
+            <tr>
+              <th>Semester</th>
+              <th>Module Code</th>
+              <th>Module Name</th>
+              <th>Mark (%)</th>
+              <th>Grade</th>
+              <th>GPA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Semester 1</td><td>DTA101</td><td>Introduction to Data Analytics</td><td>73</td><td></td><td></td></tr>
+            <tr><td>Semester 1</td><td>DTA103</td><td>Data Visualization</td><td>66</td><td></td><td></td></tr>
+            <tr><td>Semester 1</td><td>DTA104</td><td>Statistics for Analytics</td><td>65</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        
+        <div class="semester-gpa semester2" id="semester2-gpa">Semester 2 GPA: Calculating...</div>
+        <table id="semester2-table">
+          <thead>
+            <tr>
+              <th>Semester</th>
+              <th>Module Code</th>
+              <th>Module Name</th>
+              <th>Mark (%)</th>
+              <th>Grade</th>
+              <th>GPA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Semester 2</td><td>DTA105</td><td>Python for Data Analysis</td><td>59</td><td></td><td></td></tr>
+            <tr><td>Semester 2</td><td>DTA102</td><td>SQL and Databases</td><td>53</td><td></td><td></td></tr>
+            <tr><td>Semester 2</td><td>DTA106</td><td>Machine Learning Fundamentals</td><td>85</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+        
+        <div class="year-gpa" id="year-gpa">Year 1 GPA: Calculating...</div>
+      </div>
     </div>
 
-    <h2>🗓️ Weekly Planner</h2>
-    <div id="planner"></div>
+    <div id="daily-tab" class="tab-content" style="display:none;">
+      <div class="daily-log">
+        <h2>📅 Daily Activity Log</h2>
+        
+        <div class="datetime-inputs">
+          <input type="date" id="log-date" value="">
+          <input type="time" id="log-time" value="">
+        </div>
+        
+        <textarea id="log-entry" placeholder="What did you work on today? Include details about your study session, projects, or research..."></textarea>
+        
+        <div class="button-group">
+          <button onclick="addDailyLog()">Add Log Entry</button>
+          <button class="secondary" onclick="clearLogForm()">Clear Form</button>
+        </div>
+        
+        <div class="log-entries" id="log-entries">
+          <h3>Your Log History</h3>
+          <!-- Log entries will appear here -->
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -320,6 +414,114 @@
 
     const planner = document.getElementById("planner");
     const weeks = Array.from(new Set(tasks.map(t => t.week)));
+
+    // Set default date to today
+    document.getElementById('log-date').valueAsDate = new Date();
+
+    // Tab functionality
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.style.display = 'none';
+      });
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.getElementById(tabId).style.display = 'block';
+      event.currentTarget.classList.add('active');
+    }
+
+    // Daily log functions
+    function addDailyLog() {
+      const date = document.getElementById('log-date').value;
+      const time = document.getElementById('log-time').value;
+      const entry = document.getElementById('log-entry').value.trim();
+      
+      if (!date || !entry) {
+        alert("Please enter both date and log entry");
+        return;
+      }
+      
+      const timestamp = `${date} ${time || '00:00'}`;
+      const logEntry = {
+        id: Date.now(),
+        date: date,
+        time: time || '00:00',
+        timestamp: timestamp,
+        entry: entry
+      };
+      
+      // Save to localStorage
+      const logs = JSON.parse(localStorage.getItem('dailyLogs') || []);
+      logs.push(logEntry);
+      localStorage.setItem('dailyLogs', JSON.stringify(logs));
+      
+      // Add to display
+      addLogToDisplay(logEntry);
+      
+      // Clear the entry field (but keep date/time)
+      document.getElementById('log-entry').value = '';
+    }
+    
+    function addLogToDisplay(logEntry) {
+      const logEntries = document.getElementById('log-entries');
+      const logDiv = document.createElement('div');
+      logDiv.className = 'log-entry';
+      logDiv.innerHTML = `
+        <div class="log-header">
+          <span>${formatDateTime(logEntry.timestamp)}</span>
+          <button onclick="deleteLogEntry(${logEntry.id})" class="secondary" style="padding: 0.25rem 0.5rem; width: auto;">Delete</button>
+        </div>
+        <div class="log-content">${logEntry.entry.replace(/\n/g, '<br>')}</div>
+      `;
+      
+      // Insert at the top
+      if (logEntries.children.length > 1) { // Skip the "Your Log History" h3
+        logEntries.insertBefore(logDiv, logEntries.children[1]);
+      } else {
+        logEntries.appendChild(logDiv);
+      }
+    }
+    
+    function formatDateTime(timestamp) {
+      const options = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true
+      };
+      return new Date(timestamp).toLocaleString(undefined, options);
+    }
+    
+    function deleteLogEntry(id) {
+      let logs = JSON.parse(localStorage.getItem('dailyLogs') || []);
+      logs = logs.filter(log => log.id !== id);
+      localStorage.setItem('dailyLogs', JSON.stringify(logs));
+      
+      // Refresh display
+      loadDailyLogs();
+    }
+    
+    function loadDailyLogs() {
+      const logEntries = document.getElementById('log-entries');
+      // Clear existing entries (but keep the header)
+      while (logEntries.children.length > 1) {
+        logEntries.removeChild(logEntries.lastChild);
+      }
+      
+      const logs = JSON.parse(localStorage.getItem('dailyLogs') || []);
+      // Sort by timestamp (newest first)
+      logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      logs.forEach(log => addLogToDisplay(log));
+    }
+    
+    function clearLogForm() {
+      document.getElementById('log-entry').value = '';
+      document.getElementById('log-date').valueAsDate = new Date();
+      document.getElementById('log-time').value = '';
+    }
 
     // GPA calculation functions
     function markToGrade(mark) {
@@ -507,8 +709,13 @@
     document.addEventListener('DOMContentLoaded', function() {
       renderPlanner();
       calculateYearGPA();
+      loadDailyLogs();
+      
+      // Set default time to current time
+      const now = new Date();
+      document.getElementById('log-time').value = 
+        `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     });
   </script>
 </body>
 </html>
-
