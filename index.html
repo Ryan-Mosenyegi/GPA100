@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Semester GPA Planner & Archive</title>
+  <title>Semester GPA Planner</title>
   <style>
     :root {
       --bg-color: #f8fafc;
@@ -13,12 +13,14 @@
       --task-bg: #e2e8f0;
       --done-bg: #bbf7d0;
       --border-color: #cbd5e1;
-      --notes-bg: #fff7ed;
-      --notes-border: #f97316;
-      --semester1-bg: #dbeafe;
-      --semester2-bg: #fee2e2;
-      --daily-log-bg: #ecfdf5;
-      --daily-log-border: #10b981;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --secondary: #e2e8f0;
+      --secondary-hover: #cbd5e1;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .dark-mode {
       --bg-color: #0f172a;
@@ -28,502 +30,647 @@
       --task-bg: #475569;
       --done-bg: #166534;
       --border-color: #475569;
-      --notes-bg: #431407;
-      --notes-border: #9a3412;
-      --semester1-bg: #1e3a8a;
-      --semester2-bg: #7f1d1d;
-      --daily-log-bg: #064e3b;
-      --daily-log-border: #047857;
+      --primary: #60a5fa;
+      --primary-hover: #3b82f6;
+      --secondary: #475569;
+      --secondary-hover: #64748b;
     }
-    body {
-      font-family: Arial, sans-serif;
-      background: var(--bg-color);
-      color: var(--text-color);
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
       line-height: 1.6;
+      padding: 1rem;
     }
     .container {
       max-width: 1000px;
-      margin: 1rem auto;
-      padding: 1rem;
+      margin: 0 auto;
       background: var(--container-bg);
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
     }
-    h1, h2, h3, h4 {
-      text-align: center;
-      color: var(--text-color);
-    }
-    .module, .custom-module, .gpa-form, .exam-records, .module-adder, .daily-log {
-      background: var(--module-bg);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      overflow-x: auto;
-    }
-    .week {
-      margin-bottom: 1.5rem;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    li {
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      background: var(--task-bg);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-      word-break: break-word;
-    }
-    li.done {
-      text-decoration: line-through;
-      background: var(--done-bg);
-    }
-    input[type="checkbox"] {
-      min-width: 20px;
-      min-height: 20px;
-      margin-right: 1rem;
-      cursor: pointer;
-    }
-    textarea, input[type="text"], input[type="number"], input[type="date"], input[type="time"] {
-      width: 100%;
-      margin-top: 0.5rem;
-      padding: 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--border-color);
-      font-family: inherit;
-      font-size: 1rem;
-      box-sizing: border-box;
-      background: var(--container-bg);
-      color: var(--text-color);
-    }
-    .dark-toggle {
-      display: block;
-      margin: 1rem auto;
-      padding: 0.75rem 1.5rem;
-      background: var(--module-bg);
-      color: var(--text-color);
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: bold;
-    }
-    button {
-      padding: 0.75rem 1.5rem;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1rem;
-      margin-top: 0.5rem;
-      width: 100%;
-      transition: background 0.3s;
-    }
-    button:hover {
-      background: #2563eb;
-    }
-    button.secondary {
-      background: var(--task-bg);
-      color: var(--text-color);
-    }
-    button.secondary:hover {
-      background: var(--border-color);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-    th, td {
-      padding: 0.75rem;
-      border: 1px solid var(--border-color);
-      text-align: left;
-    }
-    th {
-      background: var(--task-bg);
-      font-weight: bold;
-    }
-    .module-notes, .daily-entry {
-      background: var(--notes-bg);
-      padding: 0.75rem;
-      border-left: 4px solid var(--notes-border);
-      margin: 0.5rem 0;
-      border-radius: 4px;
-    }
-    .daily-entry {
-      background: var(--daily-log-bg);
-      border-left-color: var(--daily-log-border);
-    }
-    .module-notes textarea, .daily-entry textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-    #gpa-result {
-      font-weight: bold;
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 1.1rem;
-    }
-    .mark-inputs {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .mark-inputs input {
-      margin: 0;
-    }
-    .semester-gpa {
-      font-weight: bold;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      border-radius: 4px;
-    }
-    .semester1 {
-      background: var(--semester1-bg);
-    }
-    .semester2 {
-      background: var(--semester2-bg);
-    }
-    .year-gpa {
-      font-weight: bold;
-      margin: 1rem 0;
-      padding: 0.75rem;
-      background: var(--module-bg);
-      border-radius: 6px;
-      text-align: center;
-    }
-    .datetime-inputs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .log-entries {
-      margin-top: 1rem;
-    }
-    .log-entry {
-      background: var(--daily-log-bg);
-      padding: 0.75rem;
-      margin: 0.5rem 0;
-      border-radius: 6px;
-      border-left: 4px solid var(--daily-log-border);
-    }
-    .log-header {
+    header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
+      align-items: center;
     }
-    .log-content {
-      white-space: pre-wrap;
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text-color);
+    }
+    .btn-secondary:hover {
+      background: var(--secondary-hover);
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover {
+      background: var(--danger-hover);
+    }
+    .btn-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.875rem;
+    }
+    .card {
+      background: var(--module-bg);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-control {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--container-bg);
+      color: var(--text-color);
+      font-family: inherit;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .flex {
+      display: flex;
+    }
+    .flex-col {
+      flex-direction: column;
+    }
+    .gap-2 {
+      gap: 0.5rem;
+    }
+    .gap-4 {
+      gap: 1rem;
+    }
+    .items-center {
+      align-items: center;
+    }
+    .justify-between {
+      justify-content: space-between;
+    }
+    .w-full {
+      width: 100%;
+    }
+    .mt-2 {
+      margin-top: 0.5rem;
+    }
+    .mt-4 {
+      margin-top: 1rem;
+    }
+    .mb-2 {
+      margin-bottom: 0.5rem;
+    }
+    .ml-auto {
+      margin-left: auto;
+    }
+    .task-list {
+      list-style: none;
+    }
+    .task-item {
+      padding: 0.75rem;
+      background: var(--task-bg);
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    .task-item.done {
+      background: var(--done-bg);
+      text-decoration: line-through;
+    }
+    .task-checkbox {
+      margin-right: 0.75rem;
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    .task-with-notes {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+    .task-main-row {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .task-notes-row {
+      display: flex;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+    .task-notes {
+      background: var(--container-bg);
+      padding: 0.75rem;
+      border-radius: 4px;
+      border-left: 3px solid var(--primary);
+      flex-grow: 1;
+    }
+    .task-notes textarea {
+      width: 100%;
+      min-height: 60px;
+      resize: vertical;
+      background: transparent;
+      border: none;
+      color: var(--text-color);
     }
     .tabs {
       display: flex;
-      margin-bottom: 1rem;
       border-bottom: 1px solid var(--border-color);
     }
     .tab {
       padding: 0.75rem 1.5rem;
       cursor: pointer;
       border-bottom: 3px solid transparent;
+      font-weight: 500;
     }
     .tab.active {
-      border-bottom-color: #3b82f6;
-      font-weight: bold;
+      border-bottom-color: var(--primary);
+      color: var(--primary);
     }
-
+    .tab-content {
+      padding: 1.5rem;
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .week-selector {
+      width: 120px;
+    }
+    .module-title {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-color);
+      opacity: 0.7;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      font-weight: 600;
+    }
+    .editable-input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--container-bg);
+      color: var(--text-color);
+    }
+    .history-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+    .edit-mode .editable-cell {
+      padding: 0;
+    }
     @media (max-width: 768px) {
       .container {
-        margin: 0;
         border-radius: 0;
+      }
+      header {
+        padding: 1rem;
+      }
+      .tab {
         padding: 0.75rem;
+        font-size: 0.9rem;
       }
-      h1 {
-        font-size: 1.5rem;
+      .week-selector {
+        width: 100%;
       }
-      h2 {
-        font-size: 1.3rem;
+      .task-main-row {
+        flex-direction: column;
+        align-items: flex-start;
       }
-      h3 {
-        font-size: 1.1rem;
-      }
-      table {
-        font-size: 0.8rem;
+      .task-actions {
+        margin-top: 0.5rem;
+        align-self: flex-end;
       }
       th, td {
         padding: 0.5rem;
       }
-      .mark-inputs, .datetime-inputs {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 480px) {
-      table {
-        display: block;
-        overflow-x: auto;
-        white-space: nowrap;
-      }
-      .module, .custom-module, .gpa-form, .exam-records, .module-adder, .daily-log {
-        padding: 0.75rem;
-      }
-      li {
-        padding: 0.5rem;
-      }
-      .tab {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+      .history-actions {
+        flex-direction: column;
       }
     }
   </style>
 </head>
 <body>
-  <button class="dark-toggle" onclick="document.body.classList.toggle('dark-mode')">🌙 Toggle Dark Mode</button>
   <div class="container">
-    <h1>📚 Semester GPA Planner & Archive</h1>
+    <header>
+      <h1>📚 Semester Planner</h1>
+      <button class="btn btn-secondary" onclick="document.body.classList.toggle('dark-mode')">
+        🌙 Toggle Dark Mode
+      </button>
+    </header>
 
     <div class="tabs">
-      <div class="tab active" onclick="showTab('planner-tab')">Planner</div>
-      <div class="tab" onclick="showTab('gpa-tab')">GPA Calculator</div>
-      <div class="tab" onclick="showTab('history-tab')">Academic History</div>
-      <div class="tab" onclick="showTab('daily-tab')">Daily Log</div>
+      <div class="tab active" onclick="showTab('planner')">Planner</div>
+      <div class="tab" onclick="showTab('gpa')">GPA Calculator</div>
+      <div class="tab" onclick="showTab('history')">History</div>
     </div>
 
-    <div id="planner-tab" class="tab-content">
-      <h2>🗓️ Weekly Planner</h2>
-      <div id="planner"></div>
-
-      <div class="module-adder">
-        <h2>➕ Add Your Own Module</h2>
-        <input type="text" id="modTitle" placeholder="Module Title">
-        <textarea id="modTasks" placeholder="Write tasks separated by new lines"></textarea>
-        <button onclick="addModule()">Add Module</button>
-        <div id="custom-modules"></div>
-      </div>
-    </div>
-
-    <div id="gpa-tab" class="tab-content" style="display:none;">
-      <div class="gpa-form">
-        <h2>🎯 GPA Calculator</h2>
-        <p>Enter your module marks (out of 100):</p>
-        <div class="mark-inputs">
-          <input type="number" id="mark1" placeholder="Module 1 Mark" min="0" max="100">
-          <input type="number" id="mark2" placeholder="Module 2 Mark" min="0" max="100">
-          <input type="number" id="mark3" placeholder="Module 3 Mark" min="0" max="100">
+    <div id="planner" class="tab-content active">
+      <div class="card">
+        <h2>Add New Module</h2>
+        <div class="flex gap-2">
+          <input type="text" id="modTitle" class="form-control" placeholder="Module name">
+          <button onclick="addModule()" class="btn btn-primary">Add</button>
         </div>
-        <button onclick="calculateGPA()">Calculate GPA</button>
-        <p id="gpa-result"></p>
+      </div>
+
+      <div id="module-list" class="card">
+        <h2>Your Modules</h2>
+        <div id="modules-container"></div>
+      </div>
+
+      <div id="weekly-view">
+        <h2>Weekly Tasks</h2>
+        <div id="weeks-container"></div>
       </div>
     </div>
 
-    <div id="history-tab" class="tab-content" style="display:none;">
-      <div class="exam-records">
-        <h2>📜 Academic History (Year 1)</h2>
-        
-        <div class="semester-gpa semester1" id="semester1-gpa">Semester 1 GPA: Calculating...</div>
-        <table id="semester1-table">
+    <div id="gpa" class="tab-content">
+      <div class="card">
+        <h2>GPA Calculator</h2>
+        <div class="form-group">
+          <label for="mark1">Module 1 Mark</label>
+          <input type="number" id="mark1" class="form-control" min="0" max="100" placeholder="0-100">
+        </div>
+        <div class="form-group">
+          <label for="mark2">Module 2 Mark</label>
+          <input type="number" id="mark2" class="form-control" min="0" max="100" placeholder="0-100">
+        </div>
+        <div class="form-group">
+          <label for="mark3">Module 3 Mark</label>
+          <input type="number" id="mark3" class="form-control" min="0" max="100" placeholder="0-100">
+        </div>
+        <button onclick="calculateGPA()" class="btn btn-primary w-full">Calculate GPA</button>
+        <div id="gpa-result" class="mt-4 text-center font-medium"></div>
+      </div>
+    </div>
+
+    <div id="history" class="tab-content">
+      <div class="card">
+        <h2>Academic History</h2>
+        <div class="flex justify-between items-center mb-2">
+          <div>
+            <span class="font-medium">Semester 1 GPA: </span>
+            <span id="semester1-gpa">-</span>
+          </div>
+          <button id="edit-btn" class="btn btn-secondary btn-sm" onclick="toggleEditMode()">Edit</button>
+        </div>
+        <table>
           <thead>
             <tr>
-              <th>Semester</th>
-              <th>Module Code</th>
-              <th>Module Name</th>
-              <th>Mark (%)</th>
+              <th>Module</th>
+              <th>Mark</th>
               <th>Grade</th>
               <th>GPA</th>
+              <th id="action-header" style="display: none;">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td>Semester 1</td><td>DTA101</td><td>Introduction to Data Analytics</td><td>73</td><td></td><td></td></tr>
-            <tr><td>Semester 1</td><td>DTA103</td><td>Data Visualization</td><td>66</td><td></td><td></td></tr>
-            <tr><td>Semester 1</td><td>DTA104</td><td>Statistics for Analytics</td><td>65</td><td></td><td></td></tr>
+          <tbody id="semester1-table">
+            <!-- Rows will be generated dynamically -->
           </tbody>
         </table>
-        
-        <div class="semester-gpa semester2" id="semester2-gpa">Semester 2 GPA: Calculating...</div>
-        <table id="semester2-table">
+
+        <div class="flex justify-between items-center mt-4 mb-2">
+          <div>
+            <span class="font-medium">Semester 2 GPA: </span>
+            <span id="semester2-gpa">-</span>
+          </div>
+        </div>
+        <table>
           <thead>
             <tr>
-              <th>Semester</th>
-              <th>Module Code</th>
-              <th>Module Name</th>
-              <th>Mark (%)</th>
+              <th>Module</th>
+              <th>Mark</th>
               <th>Grade</th>
               <th>GPA</th>
+              <th id="action-header-2" style="display: none;">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr><td>Semester 2</td><td>DTA105</td><td>Python for Data Analysis</td><td>59</td><td></td><td></td></tr>
-            <tr><td>Semester 2</td><td>DTA102</td><td>SQL and Databases</td><td>53</td><td></td><td></td></tr>
-            <tr><td>Semester 2</td><td>DTA106</td><td>Machine Learning Fundamentals</td><td>85</td><td></td><td></td></tr>
+          <tbody id="semester2-table">
+            <!-- Rows will be generated dynamically -->
           </tbody>
         </table>
-        
-        <div class="year-gpa" id="year-gpa">Year 1 GPA: Calculating...</div>
-      </div>
-    </div>
 
-    <div id="daily-tab" class="tab-content" style="display:none;">
-      <div class="daily-log">
-        <h2>📅 Daily Activity Log</h2>
-        
-        <div class="datetime-inputs">
-          <input type="date" id="log-date" value="">
-          <input type="time" id="log-time" value="">
+        <div class="history-actions" id="edit-actions" style="display: none;">
+          <button class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+          <button class="btn btn-secondary" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-danger" onclick="resetToDefault()">Reset to Default</button>
+          <button class="btn btn-primary" onclick="addNewRecord('semester1')">Add Semester 1 Record</button>
+          <button class="btn btn-primary" onclick="addNewRecord('semester2')">Add Semester 2 Record</button>
         </div>
-        
-        <textarea id="log-entry" placeholder="What did you work on today? Include details about your study session, projects, or research..."></textarea>
-        
-        <div class="button-group">
-          <button onclick="addDailyLog()">Add Log Entry</button>
-          <button class="secondary" onclick="clearLogForm()">Clear Form</button>
-        </div>
-        
-        <div class="log-entries" id="log-entries">
-          <h3>Your Log History</h3>
-          <!-- Log entries will appear here -->
-        </div>
+
+        <div class="mt-4 font-medium">Year GPA: <span id="year-gpa">-</span></div>
       </div>
     </div>
   </div>
 
   <script>
-    const tasks = [
-      { week: 1, text: "Organize course files and syllabus" },
-      { week: 1, text: "Install Python and Jupyter Notebook" },
-      { week: 2, text: "Review basic statistics concepts" },
-      { week: 3, text: "Practice data cleaning with Pandas" },
-      { week: 4, text: "Create first data visualization" },
-      { week: 5, text: "Learn SQL basics and practice queries" },
-      { week: 6, text: "Work on data analysis project" },
-      { week: 7, text: "Start revision and make flashcards" },
-      { week: 8, text: "Practice machine learning concepts" },
-      { week: 9, text: "Complete data analysis case study" },
-      { week: 10, text: "Revise key concepts and formulas" },
-      { week: 11, text: "Practice with past exam questions" },
-      { week: 12, text: "Final review and preparation" },
-    ];
+    // Data
+    let modules = JSON.parse(localStorage.getItem('modules') || '[]');
+    const NUM_WEEKS = 12;
+    
+    // Initialize modules if empty
+    if (modules.length === 0) {
+      modules = [
+        {
+          id: 1,
+          title: "Data Analytics",
+          tasks: [
+            { id: 1, text: "Organize course files", week: 1, done: false, notes: "" },
+            { id: 2, text: "Review basic concepts", week: 2, done: false, notes: "" }
+          ]
+        },
+        {
+          id: 2,
+          title: "Data Visualization",
+          tasks: [
+            { id: 1, text: "Install visualization tools", week: 1, done: false, notes: "" },
+            { id: 2, text: "Create first chart", week: 3, done: false, notes: "" }
+          ]
+        }
+      ];
+      localStorage.setItem('modules', JSON.stringify(modules));
+    }
 
-    const planner = document.getElementById("planner");
-    const weeks = Array.from(new Set(tasks.map(t => t.week)));
+    let academicHistory = JSON.parse(localStorage.getItem('academicHistory') || JSON.stringify({
+      semester1: [
+        { id: 1, module: 'Data Analytics', mark: 73, grade: 'B', gpa: '3.5' },
+        { id: 2, module: 'Data Visualization', mark: 66, grade: 'C', gpa: '3.0' },
+        { id: 3, module: 'Statistics', mark: 65, grade: 'C', gpa: '3.0' }
+      ],
+      semester2: [
+        { id: 1, module: 'Python', mark: 59, grade: 'D', gpa: '2.5' },
+        { id: 2, module: 'SQL', mark: 53, grade: 'D', gpa: '2.5' },
+        { id: 3, module: 'Machine Learning', mark: 85, grade: 'A', gpa: '4.0' }
+      ]
+    }));
+    
+    let originalHistory = JSON.parse(JSON.stringify(academicHistory));
+    let isEditMode = false;
 
-    // Set default date to today
-    document.getElementById('log-date').valueAsDate = new Date();
+    // DOM Elements
+    const tabContents = document.querySelectorAll('.tab-content');
+    const tabs = document.querySelectorAll('.tab');
 
     // Tab functionality
     function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.style.display = 'none';
-      });
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
-      document.getElementById(tabId).style.display = 'block';
+      tabContents.forEach(tab => tab.classList.remove('active'));
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
       event.currentTarget.classList.add('active');
     }
 
-    // Daily log functions
-    function addDailyLog() {
-      const date = document.getElementById('log-date').value;
-      const time = document.getElementById('log-time').value;
-      const entry = document.getElementById('log-entry').value.trim();
-      
-      if (!date || !entry) {
-        alert("Please enter both date and log entry");
-        return;
-      }
-      
-      const timestamp = `${date} ${time || '00:00'}`;
-      const logEntry = {
-        id: Date.now(),
-        date: date,
-        time: time || '00:00',
-        timestamp: timestamp,
-        entry: entry
-      };
-      
-      // Save to localStorage
-      const logs = JSON.parse(localStorage.getItem('dailyLogs') || []);
-      logs.push(logEntry);
-      localStorage.setItem('dailyLogs', JSON.stringify(logs));
-      
-      // Add to display
-      addLogToDisplay(logEntry);
-      
-      // Clear the entry field (but keep date/time)
-      document.getElementById('log-entry').value = '';
-    }
-    
-    function addLogToDisplay(logEntry) {
-      const logEntries = document.getElementById('log-entries');
-      const logDiv = document.createElement('div');
-      logDiv.className = 'log-entry';
-      logDiv.innerHTML = `
-        <div class="log-header">
-          <span>${formatDateTime(logEntry.timestamp)}</span>
-          <button onclick="deleteLogEntry(${logEntry.id})" class="secondary" style="padding: 0.25rem 0.5rem; width: auto;">Delete</button>
-        </div>
-        <div class="log-content">${logEntry.entry.replace(/\n/g, '<br>')}</div>
-      `;
-      
-      // Insert at the top
-      if (logEntries.children.length > 1) { // Skip the "Your Log History" h3
-        logEntries.insertBefore(logDiv, logEntries.children[1]);
-      } else {
-        logEntries.appendChild(logDiv);
-      }
-    }
-    
-    function formatDateTime(timestamp) {
-      const options = { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric',
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true
-      };
-      return new Date(timestamp).toLocaleString(undefined, options);
-    }
-    
-    function deleteLogEntry(id) {
-      let logs = JSON.parse(localStorage.getItem('dailyLogs') || []);
-      logs = logs.filter(log => log.id !== id);
-      localStorage.setItem('dailyLogs', JSON.stringify(logs));
-      
-      // Refresh display
-      loadDailyLogs();
-    }
-    
-    function loadDailyLogs() {
-      const logEntries = document.getElementById('log-entries');
-      // Clear existing entries (but keep the header)
-      while (logEntries.children.length > 1) {
-        logEntries.removeChild(logEntries.lastChild);
-      }
-      
-      const logs = JSON.parse(localStorage.getItem('dailyLogs') || []);
-      // Sort by timestamp (newest first)
-      logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      
-      logs.forEach(log => addLogToDisplay(log));
-    }
-    
-    function clearLogForm() {
-      document.getElementById('log-entry').value = '';
-      document.getElementById('log-date').valueAsDate = new Date();
-      document.getElementById('log-time').value = '';
+    // Module and Task Management
+    function saveModules() {
+      localStorage.setItem('modules', JSON.stringify(modules));
     }
 
-    // GPA calculation functions
+    function addModule() {
+      const title = document.getElementById('modTitle').value.trim();
+      if (!title) {
+        alert("Please enter a module name");
+        return;
+      }
+
+      if (modules.some(m => m.title === title)) {
+        alert("Module already exists");
+        return;
+      }
+
+      const newModule = {
+        id: Date.now(),
+        title: title,
+        tasks: []
+      };
+
+      modules.push(newModule);
+      saveModules();
+      renderModules();
+      renderWeeklyView();
+      document.getElementById('modTitle').value = '';
+    }
+
+    function deleteModule(moduleId) {
+      if (confirm("Delete this module and all its tasks?")) {
+        modules = modules.filter(m => m.id !== moduleId);
+        saveModules();
+        renderModules();
+        renderWeeklyView();
+      }
+    }
+
+    function addTask(moduleId, week) {
+      const taskInput = document.getElementById(`task-input-${moduleId}`);
+      const taskText = taskInput.value.trim();
+      if (!taskText) return;
+
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      const newTask = {
+        id: Date.now(),
+        text: taskText,
+        week: parseInt(week),
+        done: false,
+        notes: ''
+      };
+
+      module.tasks.push(newTask);
+      saveModules();
+      renderWeeklyView();
+      taskInput.value = '';
+    }
+
+    function toggleTaskDone(moduleId, taskId) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      const task = module.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      task.done = !task.done;
+      saveModules();
+      renderWeeklyView();
+    }
+
+    function updateTaskNotes(moduleId, taskId, notes) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      const task = module.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      task.notes = notes;
+      saveModules();
+    }
+
+    function deleteTask(moduleId, taskId) {
+      const module = modules.find(m => m.id === moduleId);
+      if (!module) return;
+
+      module.tasks = module.tasks.filter(t => t.id !== taskId);
+      saveModules();
+      renderWeeklyView();
+    }
+
+    function renderModules() {
+      const container = document.getElementById('modules-container');
+      container.innerHTML = '';
+
+      if (modules.length === 0) {
+        container.innerHTML = '<div class="empty-state">No modules added yet</div>';
+        return;
+      }
+
+      modules.forEach(module => {
+        const moduleDiv = document.createElement('div');
+        moduleDiv.className = 'card mt-2';
+        moduleDiv.innerHTML = `
+          <div class="flex justify-between items-center mb-2">
+            <span class="module-title">${module.title}</span>
+            <button onclick="deleteModule(${module.id})" class="btn btn-danger btn-sm">Delete</button>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="task-input-${module.id}" class="form-control" placeholder="New task">
+            <select id="week-select-${module.id}" class="form-control week-selector">
+              ${Array.from({length: NUM_WEEKS}, (_, i) => 
+                `<option value="${i+1}">Week ${i+1}</option>`).join('')}
+            </select>
+            <button onclick="addTask(${module.id}, document.getElementById('week-select-${module.id}').value)" 
+              class="btn btn-primary btn-sm">Add Task</button>
+          </div>
+        `;
+        container.appendChild(moduleDiv);
+      });
+    }
+
+    function renderWeeklyView() {
+      const container = document.getElementById('weeks-container');
+      container.innerHTML = '';
+
+      if (modules.length === 0) {
+        container.innerHTML = '<div class="empty-state">Add modules to see weekly tasks</div>';
+        return;
+      }
+
+      for (let week = 1; week <= NUM_WEEKS; week++) {
+        const weekDiv = document.createElement('div');
+        weekDiv.className = 'card mt-2';
+        weekDiv.innerHTML = `<h3>Week ${week}</h3>`;
+        
+        const hasTasks = modules.some(m => m.tasks.some(t => t.week === week));
+        if (!hasTasks) {
+          weekDiv.innerHTML += '<p>No tasks for this week</p>';
+          container.appendChild(weekDiv);
+          continue;
+        }
+
+        modules.forEach(module => {
+          const moduleTasks = module.tasks.filter(t => t.week === week);
+          if (moduleTasks.length === 0) return;
+
+          const taskList = document.createElement('ul');
+          taskList.className = 'task-list';
+
+          moduleTasks.forEach(task => {
+            const taskItem = document.createElement('li');
+            taskItem.className = `task-item ${task.done ? 'done' : ''}`;
+            taskItem.innerHTML = `
+              <div class="task-with-notes">
+                <div class="task-main-row">
+                  <input type="checkbox" ${task.done ? 'checked' : ''} 
+                    onchange="toggleTaskDone(${module.id}, ${task.id})" 
+                    class="task-checkbox">
+                  <span>${task.text}</span>
+                  <div class="task-actions">
+                    <button onclick="deleteTask(${module.id}, ${task.id})" 
+                      class="btn btn-danger btn-sm">Delete</button>
+                  </div>
+                </div>
+                <div class="task-notes-row">
+                  <div class="task-notes">
+                    <textarea placeholder="Add notes..." 
+                      oninput="updateTaskNotes(${module.id}, ${task.id}, this.value)"
+                      >${task.notes}</textarea>
+                  </div>
+                </div>
+              </div>
+            `;
+            taskList.appendChild(taskItem);
+          });
+
+          weekDiv.innerHTML += `<h4>${module.title}</h4>`;
+          weekDiv.appendChild(taskList);
+        });
+
+        container.appendChild(weekDiv);
+      }
+    }
+
+    // GPA Calculator
     function markToGrade(mark) {
       if (mark >= 80) return 'A';
       if (mark >= 70) return 'B';
@@ -542,86 +689,6 @@
       if (mark >= 30) return 1.0;
       return 0.0;
     }
-    
-    function calculateSemesterGPA(tableId, resultElementId) {
-      const table = document.getElementById(tableId);
-      const rows = table.querySelectorAll('tbody tr');
-      let totalGPA = 0;
-      let count = 0;
-      
-      rows.forEach(row => {
-        const mark = parseFloat(row.cells[3].textContent);
-        if (!isNaN(mark)) {
-          const grade = markToGrade(mark);
-          const gpa = markToGPA(mark);
-          row.cells[4].textContent = grade;
-          row.cells[5].textContent = gpa.toFixed(1);
-          totalGPA += gpa;
-          count++;
-        }
-      });
-      
-      const semesterGPA = (count > 0) ? (totalGPA / count).toFixed(2) : 0;
-      document.getElementById(resultElementId).textContent = 
-        resultElementId.includes('semester1') ? 
-        `Semester 1 GPA: ${semesterGPA}` : 
-        `Semester 2 GPA: ${semesterGPA}`;
-      
-      return parseFloat(semesterGPA);
-    }
-    
-    function calculateYearGPA() {
-      const semester1GPA = calculateSemesterGPA('semester1-table', 'semester1-gpa');
-      const semester2GPA = calculateSemesterGPA('semester2-table', 'semester2-gpa');
-      
-      const yearGPA = ((semester1GPA + semester2GPA) / 2).toFixed(2);
-      document.getElementById('year-gpa').textContent = `Year 1 GPA: ${yearGPA}`;
-    }
-
-    function renderPlanner() {
-      planner.innerHTML = '';
-      weeks.forEach(week => {
-        const weekSection = document.createElement("div");
-        weekSection.classList.add("week");
-
-        const header = document.createElement("h3");
-        header.textContent = `Week ${week}`;
-        weekSection.appendChild(header);
-
-        const ul = document.createElement("ul");
-        tasks.filter(t => t.week === week).forEach(task => {
-          const li = document.createElement("li");
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = localStorage.getItem(task.text) === 'true';
-          if (checkbox.checked) li.classList.add("done");
-          checkbox.addEventListener("change", () => {
-            li.classList.toggle("done", checkbox.checked);
-            localStorage.setItem(task.text, checkbox.checked);
-          });
-
-          li.appendChild(checkbox);
-          li.appendChild(document.createTextNode(task.text));
-
-          const note = document.createElement("div");
-          note.className = "module-notes";
-          const noteField = document.createElement("textarea");
-          noteField.placeholder = "Notes or reflections...";
-          const noteKey = `note-${task.text}`;
-          noteField.value = localStorage.getItem(noteKey) || "";
-          noteField.addEventListener("input", () => {
-            localStorage.setItem(noteKey, noteField.value);
-          });
-
-          note.appendChild(noteField);
-          ul.appendChild(li);
-          ul.appendChild(note);
-        });
-
-        weekSection.appendChild(ul);
-        planner.appendChild(weekSection);
-      });
-    }
 
     function calculateGPA() {
       const marks = [
@@ -631,90 +698,211 @@
       ];
       
       if (marks.some(isNaN)) {
-        document.getElementById('gpa-result').innerText = "Please enter all marks.";
+        document.getElementById('gpa-result').innerText = "Please enter all marks";
         return;
       }
       
       if (marks.some(mark => mark < 0 || mark > 100)) {
-        document.getElementById('gpa-result').innerText = "Marks must be between 0-100.";
+        document.getElementById('gpa-result').innerText = "Marks must be 0-100";
         return;
       }
       
       const gpa = marks.map(markToGPA);
       const finalGPA = (gpa.reduce((a, b) => a + b, 0) / gpa.length).toFixed(2);
-      document.getElementById('gpa-result').innerText = `Your GPA is ${finalGPA}`;
+      document.getElementById('gpa-result').innerText = `Your GPA: ${finalGPA}`;
     }
 
-    function addModule() {
-      const title = document.getElementById('modTitle').value.trim();
-      const tasksText = document.getElementById('modTasks').value.trim();
-      if (!title || !tasksText) {
-        alert("Please enter both module title and tasks");
-        return;
-      }
-      
-      const tasks = tasksText.split('\n').filter(t => t.trim());
-      if (tasks.length === 0) {
-        alert("Please enter at least one task");
-        return;
-      }
-      
-      const div = document.createElement('div');
-      div.className = 'custom-module';
-      div.innerHTML = `<h3>${title}</h3><ul>`;
-      
-      tasks.forEach(task => {
-        const taskKey = `custom-${title}-${task}`;
-        const noteKey = `custom-note-${title}-${task}`;
-        
-        const isDone = localStorage.getItem(taskKey) === 'true';
-        const savedNote = localStorage.getItem(noteKey) || '';
-        
-        div.innerHTML += `
-          <li class="${isDone ? 'done' : ''}">
-            <input type='checkbox' ${isDone ? 'checked' : ''}>
-            ${task}
-            <div class='module-notes'>
-              <textarea placeholder='Notes or reflections...'>${savedNote}</textarea>
-            </div>
-          </li>
-        `;
-      });
-      
-      div.innerHTML += `</ul>`;
-      document.getElementById('custom-modules').appendChild(div);
-      
-      // Add event listeners to the new checkboxes and textareas
-      div.querySelectorAll('input[type="checkbox"]').forEach((checkbox, index) => {
-        checkbox.addEventListener('change', function() {
-          const li = this.parentElement;
-          li.classList.toggle('done', this.checked);
-          const taskKey = `custom-${title}-${tasks[index]}`;
-          localStorage.setItem(taskKey, this.checked);
-        });
-      });
-      
-      div.querySelectorAll('textarea').forEach((textarea, index) => {
-        textarea.addEventListener('input', function() {
-          const noteKey = `custom-note-${title}-${tasks[index]}`;
-          localStorage.setItem(noteKey, this.value);
-        });
-      });
-      
-      document.getElementById('modTitle').value = '';
-      document.getElementById('modTasks').value = '';
-    }
-
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', function() {
-      renderPlanner();
+    // Academic History Functions
+    function saveAcademicHistory() {
+      localStorage.setItem('academicHistory', JSON.stringify(academicHistory));
       calculateYearGPA();
-      loadDailyLogs();
+    }
+
+    function toggleEditMode() {
+      isEditMode = !isEditMode;
+      const historySection = document.getElementById('history');
+      const editBtn = document.getElementById('edit-btn');
+      const editActions = document.getElementById('edit-actions');
+      const actionHeader = document.getElementById('action-header');
+      const actionHeader2 = document.getElementById('action-header-2');
       
-      // Set default time to current time
-      const now = new Date();
-      document.getElementById('log-time').value = 
-        `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      if (isEditMode) {
+        historySection.classList.add('edit-mode');
+        editBtn.textContent = 'Cancel';
+        editActions.style.display = 'flex';
+        actionHeader.style.display = 'table-cell';
+        actionHeader2.style.display = 'table-cell';
+        originalHistory = JSON.parse(JSON.stringify(academicHistory));
+      } else {
+        historySection.classList.remove('edit-mode');
+        editBtn.textContent = 'Edit';
+        editActions.style.display = 'none';
+        actionHeader.style.display = 'none';
+        actionHeader2.style.display = 'none';
+        academicHistory = JSON.parse(JSON.stringify(originalHistory));
+        renderAcademicHistory();
+      }
+    }
+
+    function saveChanges() {
+      // Update semester 1
+      academicHistory.semester1 = [];
+      const semester1Rows = document.querySelectorAll('#semester1-table tr');
+      semester1Rows.forEach(row => {
+        const mark = parseFloat(row.querySelector('[data-field="mark"]').value) || 0;
+        academicHistory.semester1.push({
+          id: parseInt(row.getAttribute('data-id')) || Date.now(),
+          module: row.querySelector('[data-field="module"]').value,
+          mark: mark,
+          grade: markToGrade(mark),
+          gpa: markToGPA(mark).toFixed(1)
+        });
+      });
+
+      // Update semester 2
+      academicHistory.semester2 = [];
+      const semester2Rows = document.querySelectorAll('#semester2-table tr');
+      semester2Rows.forEach(row => {
+        const mark = parseFloat(row.querySelector('[data-field="mark"]').value) || 0;
+        academicHistory.semester2.push({
+          id: parseInt(row.getAttribute('data-id')) || Date.now(),
+          module: row.querySelector('[data-field="module"]').value,
+          mark: mark,
+          grade: markToGrade(mark),
+          gpa: markToGPA(mark).toFixed(1)
+        });
+      });
+
+      saveAcademicHistory();
+      toggleEditMode();
+    }
+
+    function cancelEdit() {
+      toggleEditMode();
+    }
+
+    function resetToDefault() {
+      if (confirm("Reset all academic history to default values?")) {
+        academicHistory = {
+          semester1: [
+            { id: 1, module: 'Data Analytics', mark: 73, grade: 'B', gpa: '3.5' },
+            { id: 2, module: 'Data Visualization', mark: 66, grade: 'C', gpa: '3.0' },
+            { id: 3, module: 'Statistics', mark: 65, grade: 'C', gpa: '3.0' }
+          ],
+          semester2: [
+            { id: 1, module: 'Python', mark: 59, grade: 'D', gpa: '2.5' },
+            { id: 2, module: 'SQL', mark: 53, grade: 'D', gpa: '2.5' },
+            { id: 3, module: 'Machine Learning', mark: 85, grade: 'A', gpa: '4.0' }
+          ]
+        };
+        saveAcademicHistory();
+        renderAcademicHistory();
+      }
+    }
+
+    function addNewRecord(semester) {
+      const newId = academicHistory[semester].length > 0 ? 
+        Math.max(...academicHistory[semester].map(r => r.id)) + 1 : 1;
+      
+      academicHistory[semester].push({
+        id: newId,
+        module: 'New Module',
+        mark: 0,
+        grade: '',
+        gpa: ''
+      });
+      
+      renderAcademicHistory();
+    }
+
+    function deleteRecord(semester, id) {
+      if (confirm("Delete this record?")) {
+        academicHistory[semester] = academicHistory[semester].filter(r => r.id !== id);
+        renderAcademicHistory();
+      }
+    }
+
+    function renderAcademicHistory() {
+      // Render Semester 1
+      const semester1Table = document.getElementById('semester1-table');
+      semester1Table.innerHTML = '';
+      
+      academicHistory.semester1.forEach(record => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-id', record.id);
+        row.innerHTML = `
+          <td class="editable-cell">
+            <input type="text" class="editable-input" value="${record.module}" data-field="module" ${isEditMode ? '' : 'readonly'}>
+          </td>
+          <td class="editable-cell">
+            <input type="number" class="editable-input" value="${record.mark}" data-field="mark" ${isEditMode ? '' : 'readonly'}>
+          </td>
+          <td class="editable-cell">
+            <input type="text" class="editable-input" value="${record.grade}" data-field="grade" readonly>
+          </td>
+          <td class="editable-cell">
+            <input type="text" class="editable-input" value="${record.gpa}" data-field="gpa" readonly>
+          </td>
+          ${isEditMode ? `<td><button class="btn btn-danger btn-sm" onclick="deleteRecord('semester1', ${record.id})">Delete</button></td>` : ''}
+        `;
+        semester1Table.appendChild(row);
+      });
+
+      // Render Semester 2
+      const semester2Table = document.getElementById('semester2-table');
+      semester2Table.innerHTML = '';
+      
+      academicHistory.semester2.forEach(record => {
+        const row = document.createElement('tr');
+        row.setAttribute('data-id', record.id);
+        row.innerHTML = `
+          <td class="editable-cell">
+            <input type="text" class="editable-input" value="${record.module}" data-field="module" ${isEditMode ? '' : 'readonly'}>
+          </td>
+          <td class="editable-cell">
+            <input type="number" class="editable-input" value="${record.mark}" data-field="mark" ${isEditMode ? '' : 'readonly'}>
+          </td>
+          <td class="editable-cell">
+            <input type="text" class="editable-input" value="${record.grade}" data-field="grade" readonly>
+          </td>
+          <td class="editable-cell">
+            <input type="text" class="editable-input" value="${record.gpa}" data-field="gpa" readonly>
+          </td>
+          ${isEditMode ? `<td><button class="btn btn-danger btn-sm" onclick="deleteRecord('semester2', ${record.id})">Delete</button></td>` : ''}
+        `;
+        semester2Table.appendChild(row);
+      });
+
+      calculateYearGPA();
+    }
+
+    function calculateSemesterGPA(semester) {
+      const records = academicHistory[semester];
+      if (records.length === 0) return 0;
+      
+      const totalGPA = records.reduce((sum, record) => {
+        return sum + parseFloat(record.gpa || 0);
+      }, 0);
+      
+      return (totalGPA / records.length).toFixed(2);
+    }
+    
+    function calculateYearGPA() {
+      const semester1GPA = calculateSemesterGPA('semester1');
+      const semester2GPA = calculateSemesterGPA('semester2');
+      
+      document.getElementById('semester1-gpa').textContent = semester1GPA;
+      document.getElementById('semester2-gpa').textContent = semester2GPA;
+      
+      const yearGPA = ((parseFloat(semester1GPA) + parseFloat(semester2GPA)) / 2).toFixed(2);
+      document.getElementById('year-gpa').textContent = yearGPA;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      renderModules();
+      renderWeeklyView();
+      renderAcademicHistory();
     });
   </script>
 </body>
